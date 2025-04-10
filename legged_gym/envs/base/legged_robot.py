@@ -132,6 +132,7 @@ class LeggedRobot(BaseTask):
             self.extras,
             self.obs_history,
             self.commands[:, :3] * self.commands_scale,
+            self.privilege_obs_buf,
         )
 
     def compute_dof_vel(self):
@@ -354,7 +355,7 @@ class LeggedRobot(BaseTask):
             rew = self._reward_termination() * self.reward_scales["termination"]
             self.rew_buf += rew
             self.episode_sums["termination"] += rew
-
+    # rewritten
     def compute_group_observations(self):
         # note that observation noise need to modified accordingly !!!
         obs_buf = torch.cat(
@@ -371,7 +372,7 @@ class LeggedRobot(BaseTask):
 
     def compute_observations(self):
         """Computes observations"""
-        self.obs_buf = self.compute_group_observations()
+        self.obs_buf, self.privilege_obs_buf = self.compute_group_observations()
 
         # add noise if needed
         if self.add_noise:
@@ -387,7 +388,7 @@ class LeggedRobot(BaseTask):
             randomized_base_quat = quat_mul(self.random_imu_offset, self.base_quat)
             self.obs_buf[:, :3] = quat_rotate_inverse(randomized_base_quat, self.root_states[:, 10:13]) * self.obs_scales.ang_vel
             self.obs_buf[:, 3:6] = quat_rotate_inverse(randomized_base_quat, self.gravity_vec) 
-        
+        # self.privilege_obs_buf[:, 3:-1] = self.obs_buf
 
     def create_sim(self):
         """Creates simulation, terrain and evironments"""

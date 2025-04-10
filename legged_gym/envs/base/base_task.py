@@ -72,6 +72,9 @@ class BaseTask:
         self.obs_buf = torch.zeros(
             self.num_envs, self.num_obs, device=self.device, dtype=torch.float
         )
+        self.privilege_obs_buf = torch.zeros(
+            self.num_envs, self.num_obs + 3, device=self.device, dtype=torch.float
+        )
         self.obs_history = torch.zeros(
             self.num_envs,
             self.num_obs * self.obs_history_length,
@@ -119,6 +122,7 @@ class BaseTask:
             self.obs_buf,
             self.obs_history,
             self.commands[:, :3] * self.commands_scale,
+            self.privilege_obs_buf,
         )
 
     def reset_idx(self, env_ids):
@@ -128,7 +132,7 @@ class BaseTask:
     def reset(self):
         """Reset all robots"""
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
-        obs, _, _, _, _, _ = self.step(
+        obs, _, _, _, _, _, _ = self.step(
             torch.zeros(
                 self.num_envs, self.num_actions, device=self.device, requires_grad=False
             )

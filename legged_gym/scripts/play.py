@@ -73,7 +73,7 @@ def play(args):
 
     # prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
-    obs, obs_history, commands = env.get_observations()
+    obs, obs_history, commands, _ = env.get_observations()
     # load policy
     train_cfg.runner.resume = True
     train_cfg.runner.load_run = args.load_run
@@ -128,7 +128,7 @@ def play(args):
 
         env.commands[:, :] = to_torch(
             [
-                0.5,
+                0.0,
                 0.0,
                 0,
                 0 ,
@@ -136,7 +136,7 @@ def play(args):
             device=env.device,
         )
 
-        obs, rews, dones, infos, obs_history, commands = env.step(
+        obs, rews, dones, infos, obs_history, commands,_ = env.step(
             actions.detach()
         )
         if RECORD_FRAMES:

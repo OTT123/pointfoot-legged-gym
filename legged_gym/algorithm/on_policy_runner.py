@@ -57,7 +57,7 @@ class OnPolicyRunner:
             **self.ecd_cfg,
         ).to(self.device)
 
-        num_critic_obs = self.env.num_obs + self.env.num_commands
+        num_critic_obs = self.env.num_obs + 3 + self.env.num_commands
         if self.alg_cfg["critic_take_latent"]:
             num_critic_obs += encoder.num_output_dim
 
@@ -136,8 +136,8 @@ class OnPolicyRunner:
             self.env.episode_length_buf = torch.randint_like(
                 self.env.episode_length_buf, high=int(self.env.max_episode_length)
             )
-        obs, obs_history, commands = self.env.get_observations()
-        critic_obs = obs
+        obs, obs_history, commands, privilege_obs_buf = self.env.get_observations()
+        critic_obs = privilege_obs_buf
         obs, obs_history, commands, critic_obs = (
             obs.to(self.device),
             obs_history.to(self.device),
@@ -164,8 +164,8 @@ class OnPolicyRunner:
             with torch.inference_mode():
                 for i in range(self.num_steps_per_env):
                     actions = self.alg.act(obs, obs_history, commands, critic_obs)
-                    (obs, rewards, dones, infos, obs_history, commands) = self.env.step(actions)
-                    critic_obs = obs
+                    (obs, rewards, dones, infos, obs_history, commands, privilege_obs) = self.env.step(actions)
+                    critic_obs = privilege_obs
                     obs, obs_history, commands, critic_obs, rewards, dones = (
                         obs.to(self.device),
                         obs_history.to(self.device),

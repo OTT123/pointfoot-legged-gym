@@ -48,7 +48,7 @@ class Biped(LeggedRobot):
         self.envs_steps_buf[env_ids] = 0
         self.reset_buf[env_ids] = 1
         self.obs_history[env_ids] = 0
-        obs_buf = self.compute_group_observations()
+        obs_buf, privilege_obs_buf = self.compute_group_observations()
         self.obs_history[env_ids] = obs_buf[env_ids].repeat(1, self.obs_history_length)
         self.gait_indices[env_ids] = 0
         self.fail_buf[env_ids] = 0
@@ -92,7 +92,13 @@ class Biped(LeggedRobot):
             ),
             dim=-1,
         )
-        return obs_buf
+        privilege_obs_buf = torch.cat(
+            (
+                self.base_lin_vel * self.obs_scales.lin_vel,
+                obs_buf
+            ),
+            dim=-1,)
+        return obs_buf, privilege_obs_buf
 
     def _post_physics_step_callback(self):
         """Callback called before computing terminations, rewards, and observations
